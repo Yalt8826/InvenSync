@@ -35,7 +35,7 @@ const Index = () => {
     // Show welcome toast when dashboard loads
     toast({
       title: "Welcome to InvenFlow",
-      description: "Your inventory management dashboard is ready",
+      description: "Your inventory management dashboard is ready.",
     });
   }, [toast]);
 
