@@ -65,7 +65,7 @@ const Index = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back! Here's an overview of your inventory today.
+            Welcome back! Here's an overview of your inventory today lol.
           </p>
         </div>
 
