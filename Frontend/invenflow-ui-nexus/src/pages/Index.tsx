@@ -1,3 +1,4 @@
+// src/pages/index.js (or wherever your Index component is)
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
@@ -6,6 +7,7 @@ import AlertSection from "@/components/dashboard/AlertSection";
 import PricingRules from "@/components/pricing/PricingRules";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { getItemsData } from "@/api-reqs/items";
 
 const Index = () => {
   const { toast } = useToast();
@@ -16,13 +18,8 @@ const Index = () => {
   useEffect(() => {
     const fetchItemsFromSupabase = async () => {
       try {
-        const response = await fetch("http://localhost:8000/items/");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        // Assuming your FastAPI endpoint returns {"data": [...]}
-        setSupabaseItems(data.data);
+        const data = await getItemsData();
+        setSupabaseItems(data);
         setLoading(false);
       } catch (error) {
         setError(error);
@@ -69,6 +66,8 @@ const Index = () => {
           </p>
         </div>
 
+        <DashboardMetrics />
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <Tabs defaultValue="all">
@@ -85,13 +84,13 @@ const Index = () => {
                 <StockTable
                   title="All Inventory Items"
                   data={supabaseItems.map((item) => ({
-                    id: item.id.toString(),
-                    name: item.name,
+                    id: item.id?.toString() || "N/A",
+                    name: item.name || "N/A",
                     sku: item.sku == null ? "N/A" : item.sku,
-                    category: item == null ? "N/A" : item.category,
-                    price: item.price,
-                    stockLevel: item.stocklevel,
-                    status: item.status,
+                    category: item?.category || "N/A",
+                    price: item?.price || 0,
+                    stockLevel: item?.stocklevel || 0,
+                    status: item?.status || "N/A",
                   }))}
                 />
               </TabsContent>
@@ -102,16 +101,17 @@ const Index = () => {
                   data={supabaseItems
                     .filter(
                       (item) =>
-                        item.status && item.status.toLowerCase() === "low stock"
+                        item?.status &&
+                        item.status.toLowerCase() === "low stock"
                     )
                     .map((item) => ({
-                      id: item.id.toString(),
-                      name: item.name,
-                      sku: item.sku == null ? "N/A" : item.sku,
-                      category: item == null ? "N/A" : item.category,
-                      price: item.price,
-                      stockLevel: item.stocklevel,
-                      status: item.status,
+                      id: item.id?.toString() || "N/A",
+                      name: item?.name || "N/A",
+                      sku: item?.sku == null ? "N/A" : item.sku,
+                      category: item?.category || "N/A",
+                      price: item?.price || 0,
+                      stockLevel: item?.stocklevel || 0,
+                      status: item?.status || "N/A",
                     }))}
                 />
               </TabsContent>
@@ -122,24 +122,20 @@ const Index = () => {
                   data={supabaseItems
                     .filter(
                       (item) =>
-                        item.status &&
+                        item?.status &&
                         item.status.toLowerCase() === "out of stock"
                     )
                     .map((item) => ({
-                      id: item.id.toString(),
-                      name: item.name,
-                      sku: item.sku == null ? "N/A" : item.sku,
-                      category: item == null ? "N/A" : item.category,
-                      price: item.price,
-                      stockLevel: item.stocklevel,
-                      status: item.status,
+                      id: item.id?.toString() || "N/A",
+                      name: item?.name || "N/A",
+                      sku: item?.sku == null ? "N/A" : item.sku,
+                      category: item?.category || "N/A",
+                      price: item?.price || 0,
+                      stockLevel: item?.stocklevel || 0,
+                      status: item?.status || "N/A",
                     }))}
                 />
               </TabsContent>
-
-              {/* You can create more TabsContent components if you want to filter the supabaseItems */}
-              {/* For example, to show only "Low Stock" items, you would need to extend */}
-              {/* your Supabase table and API to include a 'status' or 'stockLevel' field. */}
             </Tabs>
           </div>
 

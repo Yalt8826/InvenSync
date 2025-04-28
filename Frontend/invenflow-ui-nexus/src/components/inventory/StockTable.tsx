@@ -1,6 +1,12 @@
-
 import { useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +18,7 @@ interface Product {
   category: string;
   price: number;
   stockLevel: number;
-  status: 'In Stock' | 'Low Stock' | 'Out of Stock';
+  status: "In Stock" | "Low Stock" | "Out of Stock";
 }
 
 interface StockTableProps {
@@ -22,7 +28,7 @@ interface StockTableProps {
 
 export const StockTable = ({ title, data }: StockTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Filter data based on search term
   const filteredData = data.filter((product) => {
     return (
@@ -33,12 +39,24 @@ export const StockTable = ({ title, data }: StockTableProps) => {
   });
 
   const getStatusBadge = (status: string) => {
-    if (status === 'In Stock') {
-      return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">{status}</Badge>;
-    } else if (status === 'Low Stock') {
-      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">{status}</Badge>;
+    if (status === "In Stock") {
+      return (
+        <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+          {status}
+        </Badge>
+      );
+    } else if (status === "Low Stock") {
+      return (
+        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+          {status}
+        </Badge>
+      );
     } else {
-      return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">{status}</Badge>;
+      return (
+        <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
+          {status}
+        </Badge>
+      );
     }
   };
 
@@ -56,7 +74,7 @@ export const StockTable = ({ title, data }: StockTableProps) => {
           <Button size="sm">Add New</Button>
         </div>
       </div>
-      
+
       <div className="table-container">
         <Table>
           <TableHeader>
@@ -77,11 +95,17 @@ export const StockTable = ({ title, data }: StockTableProps) => {
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.sku}</TableCell>
                   <TableCell>{product.category}</TableCell>
-                  <TableCell className="text-right">${product.price.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">{product.stockLevel}</TableCell>
+                  <TableCell className="text-right">
+                    ${product.price.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {product.stockLevel}
+                  </TableCell>
                   <TableCell>{getStatusBadge(product.status)}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">Edit</Button>
+                    <Button variant="ghost" size="sm">
+                      Edit
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))

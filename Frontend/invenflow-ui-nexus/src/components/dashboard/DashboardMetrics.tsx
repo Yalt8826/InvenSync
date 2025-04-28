@@ -1,85 +1,107 @@
-
 import { Card } from "@/components/ui/card";
 import {
   BarChart as ChartIcon,
   TrendingDown,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Package2, // Import Package2 for Total Stock icon
 } from "lucide-react";
+import { getItemsData } from "@/api-reqs/items";
+import { useEffect, useState } from "react";
 
 interface MetricCardProps {
   title: string;
-  value: string;
-  change: string;
+  value: string | number;
+  change?: string;
   isPositive?: boolean;
   isWarning?: boolean;
   icon: React.ReactNode;
 }
 
-const MetricCard = ({ title, value, change, isPositive, isWarning, icon }: MetricCardProps) => (
+const MetricCard = ({
+  title,
+  value,
+  change,
+  isPositive,
+  isWarning,
+  icon,
+}: MetricCardProps) => (
   <Card className="metric-card">
     <div className="flex items-center justify-between">
       <div>
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
         <h3 className="text-2xl font-bold mt-1">{value}</h3>
-        <div className="flex items-center mt-2">
-          {isWarning ? (
-            <AlertTriangle className="h-4 w-4 text-yellow-500 mr-1" />
-          ) : isPositive ? (
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-          ) : (
-            <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
-          )}
-          <span 
-            className={`text-sm ${
-              isWarning 
-                ? "text-yellow-600" 
-                : isPositive 
-                  ? "text-green-600" 
-                  : "text-red-600"
-            }`}
-          >
-            {change}
-          </span>
-        </div>
       </div>
-      <div className="p-2 bg-primary/10 rounded-full">
-        {icon}
-      </div>
+      <div className="p-2 bg-primary/10 rounded-full">{icon}</div>
     </div>
   </Card>
 );
 
 export const DashboardMetrics = () => {
+  const [supabaseItems, setSupabaseItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [totalStock, setTotalStock] = useState(0);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const data = await getItemsData();
+        setSupabaseItems(data);
+        setLoading(false);
+
+        const calculatedTotalStock = data.reduce(
+          (sum, item) => sum + (item?.stocklevel || 0),
+          0
+        );
+        setTotalStock(calculatedTotalStock);
+      } catch (error) {
+        setError(error);
+        setLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, []);
+
+  if (loading) {
+    return <div>Loading metrics...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading metrics: {error.message}</div>;
+  }
+
+  const totalProducts = supabaseItems.length;
+  const lowStockItemsCount = supabaseItems.filter(
+    (item) => item?.status?.toLowerCase() === "low stock"
+  ).length;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <MetricCard
         title="Total Products"
-        value="1,284"
-        change="12% from last month"
-        isPositive
+        value={totalProducts}
         icon={<ChartIcon className="h-6 w-6 text-primary" />}
       />
       <MetricCard
+        title="Total Stock"
+        value={totalStock}
+        icon={<Package2 className="h-6 w-6 text-primary" />}
+      />
+      <MetricCard
         title="Low Stock Items"
-        value="32"
-        change="8 more than yesterday"
-        isWarning
+        value={lowStockItemsCount}
+        change="Based on current inventory"
+        isWarning={lowStockItemsCount > 5}
         icon={<AlertTriangle className="h-6 w-6 text-yellow-500" />}
       />
       <MetricCard
         title="Monthly Revenue"
-        value="$48,573"
+        value="$48,573" // This data would likely come from another source
         change="18% from last month"
         isPositive
         icon={<TrendingUp className="h-6 w-6 text-primary" />}
-      />
-      <MetricCard
-        title="Stock Value"
-        value="$245,890"
-        change="2% from last week"
-        isPositive
-        icon={<ChartIcon className="h-6 w-6 text-primary" />}
       />
     </div>
   );
