@@ -120,7 +120,7 @@ export const DashboardMetrics = () => {
         title="Monthly Revenue"
         value={
           revenue !== null
-            ? `$${revenue.toLocaleString(undefined, {
+            ? `₹${revenue.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
               })}`
             : "Loading..."
