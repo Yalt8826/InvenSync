@@ -291,3 +291,68 @@ async def get_total_revenue(supabase_client: Client = Depends(get_supabase_clien
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {e}",
         )
+
+
+class Customer(BaseModel):
+    name: str
+    address: Optional[str] = None
+    phone_no: Optional[str] = None
+    email: Optional[str] = None
+    gender: Optional[str] = None
+    dob: Optional[str] = None  # Expecting format: YYYY-MM-DD
+
+
+@app.get("/customers/")
+async def get_all_customers(supabase_client: Client = Depends(get_supabase_client)):
+    try:
+        response = supabase_client.table("customers").select("*").execute()
+
+        if not response.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="No customers found"
+            )
+
+        return {"data": response.data}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logging.exception("Error in get_all_customers")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {e}",
+        )
+
+
+@app.post("/add-customer/")
+async def add_customer(
+    customer: Customer, supabase_client: Client = Depends(get_supabase_client)
+):
+    try:
+        customer_data = customer.dict(exclude_none=True)
+        response = supabase_client.table("customers").insert(customer_data).execute()
+
+        if response.error:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(response.error),
+            )
+
+        if response.data and len(response.data) > 0:
+            return {"data": response.data[0]}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="No data returned from insert.",
+            )
+    except HTTPException as e:
+        raise e
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors()
+        )
+    except Exception as e:
+        logging.exception("Error in add_customer")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {e}",
+        )
