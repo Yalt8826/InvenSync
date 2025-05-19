@@ -26,15 +26,15 @@ export interface Order {
   quantity: number;
   supplier_id: number;
   customer_id: number;
-  total_price: number;
-  order_date: string;
-  expected_date: string;
-  status: string;
-  created_at: string;
+  total_price?: number;
+  order_date?: string;
+  expected_date?: string;
+  status?: string;
+  created_at?: string;
 
-  items?: { name: string };
-  supplier?: { name: string };
-  customer?: { name: string };
+  items?: { name?: string; id: number };
+  supplier?: { name?: string; id: number };
+  customers?: { name?: string; id: number };
 }
 
 interface Props {
@@ -47,8 +47,9 @@ export const OrderTable: React.FC<Props> = ({ data }) => {
   const filteredData = data.filter((order) => {
     if (filter === "all") return true;
     if (filter === "delivered")
-      return order.status.toLowerCase() === "delivered";
-    if (filter === "pending") return order.status.toLowerCase() !== "delivered";
+      return order.status?.toLowerCase() === "delivered";
+    if (filter === "pending")
+      return order.status?.toLowerCase() !== "delivered";
     return true;
   });
 
@@ -91,14 +92,20 @@ export const OrderTable: React.FC<Props> = ({ data }) => {
               <TableCell>{order.id}</TableCell>
               <TableCell>{order.items?.name || order.item_id}</TableCell>
               <TableCell>{order.supplier?.name || order.supplier_id}</TableCell>
-              <TableCell>{order.customer?.name || order.customer_id}</TableCell>
-              <TableCell>{order.quantity}</TableCell>
-              <TableCell>₹{order.total_price.toFixed(2)}</TableCell>
               <TableCell>
-                {new Date(order.order_date).toLocaleDateString()}
+                {order.customers?.name || order.customer_id}
+              </TableCell>
+              <TableCell>{order.quantity}</TableCell>
+              <TableCell>₹{order.total_price?.toFixed(2)}</TableCell>
+              <TableCell>
+                {order.order_date
+                  ? new Date(order.order_date).toLocaleDateString()
+                  : ""}
               </TableCell>
               <TableCell>
-                {new Date(order.expected_date).toLocaleDateString()}
+                {order.expected_date
+                  ? new Date(order.expected_date).toLocaleDateString()
+                  : ""}
               </TableCell>
               <TableCell>
                 <Badge>{order.status}</Badge>

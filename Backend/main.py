@@ -36,6 +36,21 @@ async def get_supabase_client():
     return supabase
 
 
+class ItemName(BaseModel):
+    name: Optional[str] = None
+    id: int  # Include ID if you need it elsewhere
+
+
+class SupplierName(BaseModel):
+    name: Optional[str] = None
+    id: int  # Include ID if you need it elsewhere
+
+
+class CustomerName(BaseModel):
+    name: Optional[str] = None
+    id: int  # Include ID if you need it elsewhere
+
+
 class Item(BaseModel):
     name: str
     sku: Optional[str] = None
@@ -43,6 +58,7 @@ class Item(BaseModel):
     price: Optional[float] = None
     stocklevel: Optional[int] = None
     supplier_id: Optional[int] = None  # Changed supplier to supplier_id
+    id: Optional[int] = None  # Include ID if present in response
 
 
 @app.get("/items/")
@@ -121,10 +137,11 @@ async def create_item(
         )
 
 
-class Supplier(BaseModel):
+class SupplierModel(BaseModel):
     name: str
     address: Optional[str] = None
     gstno: Optional[str] = None
+    id: Optional[int] = None  # Include ID if present in response
 
 
 @app.get("/suppliers/")
@@ -150,7 +167,7 @@ async def get_all_suppliers(supabase_client: Client = Depends(get_supabase_clien
 
 @app.post("/add-supplier/")
 async def add_supplier(
-    supplier: Supplier, supabase_client: Client = Depends(get_supabase_client)
+    supplier: SupplierModel, supabase_client: Client = Depends(get_supabase_client)
 ):
     try:
         supplier_data = supplier.dict(exclude_none=True)
@@ -184,7 +201,7 @@ async def add_supplier(
         )
 
 
-class Order(BaseModel):
+class OrderResponse(BaseModel):
     item_id: int
     supplier_id: int
     quantity: int
@@ -193,6 +210,10 @@ class Order(BaseModel):
     status: Optional[str] = None  # e.g., "pending", "shipped", "delivered"
     total_price: Optional[float] = None
     notes: Optional[str] = None
+    items: Optional[ItemName] = None
+    supplier: Optional[SupplierName] = None
+    customers: Optional[CustomerName] = None
+    id: Optional[int] = None
 
 
 @app.get("/orders/")
@@ -202,11 +223,11 @@ async def get_all_orders(supabase_client: Client = Depends(get_supabase_client))
             supabase_client.table("orders")
             .select(
                 """
-            *,
-            items (name),
-            supplier (name),
-            customers (name)
-            """
+                *,
+                items (name, id),
+                supplier (name, id),
+                customers (name, id)
+                """
             )
             .execute()
         )
@@ -217,7 +238,8 @@ async def get_all_orders(supabase_client: Client = Depends(get_supabase_client))
                 detail="No orders found",
             )
 
-        return {"data": response.data}
+        orders = [OrderResponse(**order) for order in response.data]
+        return {"data": orders}
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -293,13 +315,14 @@ async def get_total_revenue(supabase_client: Client = Depends(get_supabase_clien
         )
 
 
-class Customer(BaseModel):
+class CustomerModel(BaseModel):
     name: str
     address: Optional[str] = None
     phone_no: Optional[str] = None
     email: Optional[str] = None
     gender: Optional[str] = None
     dob: Optional[str] = None  # Expecting format: YYYY-MM-DD
+    id: Optional[int] = None  # Include ID if present in response
 
 
 @app.get("/customers/")
@@ -325,7 +348,7 @@ async def get_all_customers(supabase_client: Client = Depends(get_supabase_clien
 
 @app.post("/add-customer/")
 async def add_customer(
-    customer: Customer, supabase_client: Client = Depends(get_supabase_client)
+    customer: CustomerModel, supabase_client: Client = Depends(get_supabase_client)
 ):
     try:
         customer_data = customer.dict(exclude_none=True)
