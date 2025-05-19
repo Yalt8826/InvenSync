@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Supplier from "./pages/Supplier";
+import Orders from "./pages/Orders";
 import UserSettings from "./pages/UserSettings";
 import NotFound from "./pages/NotFound";
 import { useEffect, useState } from "react";
@@ -22,8 +24,8 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Index />} />
           <Route path="/inventory" element={<Inventory />} />
-          <Route path="/suppliers" element={<Index />} />
-          <Route path="/orders" element={<Index />} />
+          <Route path="/suppliers" element={<Supplier />} />
+          <Route path="/orders" element={<Orders />} />
           <Route path="/settings" element={<UserSettings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

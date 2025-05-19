@@ -4,15 +4,13 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime, timezone
 
 load_dotenv()
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-
-print(f"SUPABASE_URL from environment: {SUPABASE_URL}")
-print(f"SUPABASE_KEY from environment: {SUPABASE_KEY}")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables must be set.")
@@ -21,8 +19,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 app = FastAPI()
 
 origins = [
-    "http://localhost:8080",
-    # Add other origins if needed
+    "http://localhost:8080",  # your frontend
 ]
 
 app.add_middleware(
@@ -43,18 +40,16 @@ class Item(BaseModel):
     sku: Optional[str] = None
     category: Optional[str] = None
     price: Optional[float] = None
-    stocklevel: Optional[int] = None  # Explicitly Optional
-    supplier: Optional[str] = None
+    stocklevel: Optional[int] = None
+    supplier: Optional[int] = None
 
 
 @app.get("/items/")
 async def get_all_items(supabase_client: Client = Depends(get_supabase_client)):
     try:
         response = supabase_client.table("items").select("*").execute()
-        print("FastAPI Backend - Get All Items Response:", response.data)
         return {"data": response.data}
     except Exception as e:
-        print("FastAPI Backend - Get All Items Error:", e)
         return {"error": str(e)}
 
 
@@ -70,10 +65,8 @@ async def get_item_by_id(
             .single()
             .execute()
         )
-        print("FastAPI Backend - Get Item by ID Response:", response.data)
         return {"data": response.data}
     except Exception as e:
-        print("FastAPI Backend - Get Item by ID Error:", e)
         return {"error": str(e)}
 
 
@@ -81,38 +74,132 @@ async def get_item_by_id(
 async def create_item(
     item: Item, supabase_client: Client = Depends(get_supabase_client)
 ):
-    """
-    Endpoint to create a new item in the Supabase database.
-    """
-    print("FastAPI Backend - Received Item (Pydantic):", item)
-    print("FastAPI Backend - Received Item (dict):", item.dict())
-
     try:
         item_data = item.dict(exclude_none=True)
-        print("FastAPI Backend - item_data before adding created_at:", item_data)
         item_data["created_at"] = "now()"
-        print("FastAPI Backend - item_data for Supabase insert:", item_data)
+        response = supabase_client.table("items").insert(item_data).execute()
 
-        data, error = supabase_client.table("items").insert(item_data).execute()
+        if response.error:
+            raise HTTPException(status_code=500, detail=str(response.error))
 
-        print("FastAPI Backend - Supabase Insert Response (data):", data)
-        print("FastAPI Backend - Supabase Insert Response (error):", error)
-
-        if error:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to add item to database: {error}"
-            )
-
-        if data and len(data.data) > 0:
-            return {"message": "Item added successfully", "data": data.data[0]}
+        if response.data and len(response.data) > 0:
+            return {"data": response.data[0]}
         else:
-            raise HTTPException(
-                status_code=500, detail="Failed to retrieve inserted data."
-            )
-
+            raise HTTPException(status_code=500, detail="No data returned from insert.")
     except HTTPException as e:
-        print("FastAPI Backend - HTTPException:", e.detail)
         raise e
     except Exception as e:
-        print("FastAPI Backend - Internal Server Error:", e)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+
+@app.post("/add-item")
+async def add_item(item: Item, supabase_client: Client = Depends(get_supabase_client)):
+    try:
+        item_data = item.dict(exclude_none=True)
+        item_data["created_at"] = datetime.now(timezone.utc).isoformat()
+        response = supabase_client.table("items").insert(item_data).execute()
+
+        if response.error:
+            raise HTTPException(status_code=500, detail=str(response.error))
+
+        if response.data and len(response.data) > 0:
+            return {"data": response.data[0]}
+        else:
+            raise HTTPException(status_code=500, detail="No data returned from insert.")
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+
+class Supplier(BaseModel):
+    name: str
+    address: Optional[str] = None
+    gstno: Optional[str] = None
+
+
+@app.get("/suppliers/")
+async def get_all_suppliers(supabase_client: Client = Depends(get_supabase_client)):
+    try:
+        response = supabase_client.table("supplier").select("*").execute()
+
+        if not response.data:
+            raise HTTPException(status_code=404, detail="No suppliers found")
+
+        return {"data": response.data}
+    except Exception as e:
+        print("Unexpected Error:", e)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+
+@app.post("/add-supplier/")
+async def add_supplier(
+    supplier: Supplier, supabase_client: Client = Depends(get_supabase_client)
+):
+    try:
+        supplier_data = supplier.dict(exclude_none=True)
+        # Do NOT add created_at since the table doesn't have that column
+        response = supabase_client.table("supplier").insert(supplier_data).execute()
+
+        if response.error:
+            print("Supabase insert error:", response.error)
+            raise HTTPException(status_code=500, detail=str(response.error))
+
+        if response.data and len(response.data) > 0:
+            return {"data": response.data[0]}
+        else:
+            raise HTTPException(status_code=500, detail="No data returned from insert.")
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print("Unexpected server error:", e)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+
+class Order(BaseModel):
+    item_id: int
+    supplier_id: int
+    quantity: int
+    order_date: datetime
+    expected_date: Optional[datetime] = None
+    status: str  # e.g., "pending", "shipped", "delivered"
+    total_price: float
+    notes: Optional[str] = None
+
+
+@app.post("/add-order")
+async def add_order(
+    order: Order, supabase_client: Client = Depends(get_supabase_client)
+):
+    try:
+        order_data = order.dict(exclude_none=True)
+        order_data["created_at"] = datetime.now(timezone.utc).isoformat()
+
+        response = supabase_client.table("orders").insert(order_data).execute()
+
+        if response.error:
+            raise HTTPException(status_code=500, detail=str(response.error))
+
+        if response.data and len(response.data) > 0:
+            return {"data": response.data[0]}
+        else:
+            raise HTTPException(status_code=500, detail="No data returned from insert.")
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print("Unexpected Error:", e)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+
+@app.get("/orders/")
+async def get_all_orders(supabase_client: Client = Depends(get_supabase_client)):
+    try:
+        response = supabase_client.table("orders").select("*").execute()
+
+        if not response.data:
+            raise HTTPException(status_code=404, detail="No suppliers found")
+
+        return {"data": response.data}
+    except Exception as e:
+        print("Unexpected Error:", e)
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")

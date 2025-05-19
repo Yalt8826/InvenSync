@@ -82,8 +82,8 @@ const Index = () => {
 
               <TabsContent value="all" className="mt-0">
                 <StockTable
-                  title="All Inventory Items"
-                  data={supabaseItems.map((item) => ({
+                  title="Top 5 Inventory Items"
+                  data={supabaseItems.slice(0, 5).map((item) => ({
                     id: item.id?.toString() || "N/A",
                     name: item.name || "N/A",
                     sku: item.sku == null ? "N/A" : item.sku,
