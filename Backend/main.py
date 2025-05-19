@@ -101,7 +101,7 @@ async def get_item_by_id(
         )
 
 
-@app.post("/items/")
+@app.post("/items/")  # Correct route for creating items
 async def create_item(
     item: Item, supabase_client: Client = Depends(get_supabase_client)
 ):
@@ -135,6 +135,26 @@ async def create_item(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {e}",
         )
+
+
+@app.post("/add-item")
+async def add_item(item: Item, supabase_client: Client = Depends(get_supabase_client)):
+    try:
+        item_data = item.dict(exclude_none=True)
+        item_data["created_at"] = datetime.now(timezone.utc).isoformat()
+        data, error = supabase_client.table("items").insert(item_data).execute()
+
+        if error:
+            raise HTTPException(status_code=500, detail=error.message)
+
+        if data and len(data) > 0:
+            return {"data": data[0]}
+        else:
+            raise HTTPException(status_code=500, detail="No data returned from insert.")
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 
 class SupplierModel(BaseModel):
@@ -321,7 +341,7 @@ class CustomerModel(BaseModel):
     phone_no: Optional[str] = None
     email: Optional[str] = None
     gender: Optional[str] = None
-    dob: Optional[str] = None  # Expecting format: YYYY-MM-DD
+    dob: Optional[str] = None  # Expecting format:-MM-DD
     id: Optional[int] = None  # Include ID if present in response
 
 

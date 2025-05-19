@@ -162,8 +162,6 @@ const Index = () => {
             <AlertSection />
           </div>
         </div>
-
-        <PricingRules />
       </div>
     </AppLayout>
   );
