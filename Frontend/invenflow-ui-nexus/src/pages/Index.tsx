@@ -117,7 +117,6 @@ const Index = () => {
 
               <TabsContent value="all" className="mt-0">
                 <StockTable
-<<<<<<< HEAD
                   title="Top 5 Inventory Items"
                   data={supabaseItems.slice(0, 5).map((item) => ({
                     id: item.id?.toString() || "N/A",
@@ -128,10 +127,6 @@ const Index = () => {
                     stockLevel: item?.stocklevel || 0,
                     status: item?.status || "N/A",
                   }))}
-=======
-                  title="All Inventory Items"
-                  data={transformItemData(supabaseItems)} // Use the transform function
->>>>>>> cc37991a908b2fc1ac25057d9920ed1b2a431017
                 />
               </TabsContent>
 
