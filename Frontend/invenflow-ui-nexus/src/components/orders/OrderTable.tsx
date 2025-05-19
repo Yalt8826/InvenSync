@@ -24,6 +24,8 @@ export interface Order {
   id: number;
   item_id: number;
   quantity: number;
+  supplier_id: number;
+  customer_id: number;
   total_price: number;
   order_date: string;
   expected_date: string;
@@ -70,6 +72,8 @@ export const OrderTable: React.FC<Props> = ({ data }) => {
           <TableRow>
             <TableHead>Order ID</TableHead>
             <TableHead>Item ID</TableHead>
+            <TableHead>Supplier ID</TableHead>
+            <TableHead>Customer ID</TableHead>
             <TableHead>Quantity</TableHead>
             <TableHead>Total Price</TableHead>
             <TableHead>Order Date</TableHead>
@@ -82,6 +86,8 @@ export const OrderTable: React.FC<Props> = ({ data }) => {
             <TableRow key={order.id}>
               <TableCell>{order.id}</TableCell>
               <TableCell>{order.item_id}</TableCell>
+              <TableCell>{order.supplier_id}</TableCell>
+              <TableCell>{order.customer_id}</TableCell>
               <TableCell>{order.quantity}</TableCell>
               <TableCell>₹{order.total_price.toFixed(2)}</TableCell>
               <TableCell>
