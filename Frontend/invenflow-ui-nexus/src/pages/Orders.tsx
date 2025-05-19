@@ -10,18 +10,21 @@ import { Label } from "@/components/ui/label";
 import { OrderTable } from "@/components/orders/OrderTable";
 
 // Order interface (matches the Python backend) - Adjusted to reflect what we RECEIVE from the backend
-interface Order {
-  id?: number;
+export interface Order {
+  id: number;
   item_id: number;
-  customer_id: number;
-  supplier_id: number;
   quantity: number;
-  order_date?: string;
-  expected_date?: string;
-  status?: string;
-  total_price?: number;
-  notes?: string;
-  created_at?: string;
+  supplier_id: number;
+  customer_id: number;
+  total_price: number;
+  order_date: string;
+  expected_date: string;
+  status: string;
+  created_at: string;
+
+  items?: { name: string };
+  supplier?: { name: string };
+  customer?: { name: string };
 }
 
 // Form validation schema - Include customer_id

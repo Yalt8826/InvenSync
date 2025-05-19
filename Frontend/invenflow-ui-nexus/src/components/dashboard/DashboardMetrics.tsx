@@ -1,12 +1,13 @@
+// DashboardMetrics.tsx
 import { Card } from "@/components/ui/card";
 import {
   BarChart as ChartIcon,
-  TrendingDown,
   TrendingUp,
   AlertTriangle,
-  Package2, // Import Package2 for Total Stock icon
+  Package2,
 } from "lucide-react";
 import { getItemsData } from "@/api-reqs/items";
+import { getTotalRevenue } from "@/api-reqs/totalrev"; // 👈 API to get total revenue
 import { useEffect, useState } from "react";
 
 interface MetricCardProps {
@@ -31,6 +32,19 @@ const MetricCard = ({
       <div>
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
         <h3 className="text-2xl font-bold mt-1">{value}</h3>
+        {change && (
+          <p
+            className={`text-xs mt-1 ${
+              isWarning
+                ? "text-yellow-600"
+                : isPositive
+                ? "text-green-600"
+                : "text-red-600"
+            }`}
+          >
+            {change}
+          </p>
+        )}
       </div>
       <div className="p-2 bg-primary/10 rounded-full">{icon}</div>
     </div>
@@ -40,28 +54,34 @@ const MetricCard = ({
 export const DashboardMetrics = () => {
   const [supabaseItems, setSupabaseItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<any>(null);
   const [totalStock, setTotalStock] = useState(0);
+  const [revenue, setRevenue] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getItemsData();
-        setSupabaseItems(data);
+        const [itemsData, revenueData] = await Promise.all([
+          getItemsData(),
+          getTotalRevenue(),
+        ]);
+
+        setSupabaseItems(itemsData);
+        setRevenue(revenueData);
         setLoading(false);
 
-        const calculatedTotalStock = data.reduce(
+        const calculatedTotalStock = itemsData.reduce(
           (sum, item) => sum + (item?.stocklevel || 0),
           0
         );
         setTotalStock(calculatedTotalStock);
-      } catch (error) {
-        setError(error);
+      } catch (err) {
+        setError(err);
         setLoading(false);
       }
     };
 
-    fetchItems();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -98,8 +118,14 @@ export const DashboardMetrics = () => {
       />
       <MetricCard
         title="Monthly Revenue"
-        value="$48,573" // This data would likely come from another source
-        change="18% from last month"
+        value={
+          revenue !== null
+            ? `$${revenue.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              })}`
+            : "Loading..."
+        }
+        change="Updated live"
         isPositive
         icon={<TrendingUp className="h-6 w-6 text-primary" />}
       />

@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { 
+import {
   ArrowLeft,
   BarChart,
   Calendar,
   Database,
-  Settings, 
+  Settings,
   ShoppingCart,
   User,
-  LogOut
+  LogOut,
+  PersonStanding,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -47,7 +48,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         {/* Logo section */}
         <div className="flex items-center h-16 px-4 border-b border-sidebar-border">
           {!collapsed && (
-            <h1 className="text-lg font-semibold text-sidebar-foreground">InvenFlow</h1>
+            <h1 className="text-lg font-semibold text-sidebar-foreground">
+              InvenFlow
+            </h1>
           )}
           <Button
             variant="ghost"
@@ -69,15 +72,17 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               { name: "Dashboard", icon: BarChart, href: "/" },
               { name: "Inventory", icon: Database, href: "/inventory" },
               { name: "Suppliers", icon: ShoppingCart, href: "/suppliers" },
+              { name: "Customers", icon: PersonStanding, href: "/customers" },
               { name: "Orders", icon: Calendar, href: "/orders" },
-              { name: "Settings", icon: Settings, href: "/settings" }
+              { name: "Settings", icon: Settings, href: "/settings" },
             ].map((item) => (
               <li key={item.name}>
                 <Link
                   to={item.href}
                   className={cn(
                     "flex items-center px-2 py-2 text-sidebar-foreground rounded-md hover:bg-sidebar-accent group",
-                    window.location.pathname === item.href && "bg-sidebar-accent"
+                    window.location.pathname === item.href &&
+                      "bg-sidebar-accent"
                   )}
                 >
                   <item.icon className="h-5 w-5 text-sidebar-foreground" />
@@ -104,7 +109,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               </div>
               {!collapsed && (
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-sidebar-foreground">Admin User</p>
+                  <p className="text-sm font-medium text-sidebar-foreground">
+                    Admin User
+                  </p>
                 </div>
               )}
             </div>

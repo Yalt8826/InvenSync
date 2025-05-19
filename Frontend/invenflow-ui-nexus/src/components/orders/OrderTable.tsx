@@ -31,6 +31,10 @@ export interface Order {
   expected_date: string;
   status: string;
   created_at: string;
+
+  items?: { name: string };
+  supplier?: { name: string };
+  customer?: { name: string };
 }
 
 interface Props {
@@ -70,10 +74,10 @@ export const OrderTable: React.FC<Props> = ({ data }) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Order ID</TableHead>
-            <TableHead>Item ID</TableHead>
-            <TableHead>Supplier ID</TableHead>
-            <TableHead>Customer ID</TableHead>
+            <TableHead>Order</TableHead>
+            <TableHead>Item</TableHead>
+            <TableHead>Supplier</TableHead>
+            <TableHead>Customer</TableHead>
             <TableHead>Quantity</TableHead>
             <TableHead>Total Price</TableHead>
             <TableHead>Order Date</TableHead>
@@ -85,9 +89,9 @@ export const OrderTable: React.FC<Props> = ({ data }) => {
           {filteredData.map((order) => (
             <TableRow key={order.id}>
               <TableCell>{order.id}</TableCell>
-              <TableCell>{order.item_id}</TableCell>
-              <TableCell>{order.supplier_id}</TableCell>
-              <TableCell>{order.customer_id}</TableCell>
+              <TableCell>{order.items?.name || order.item_id}</TableCell>
+              <TableCell>{order.supplier?.name || order.supplier_id}</TableCell>
+              <TableCell>{order.customer?.name || order.customer_id}</TableCell>
               <TableCell>{order.quantity}</TableCell>
               <TableCell>₹{order.total_price.toFixed(2)}</TableCell>
               <TableCell>

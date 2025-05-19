@@ -198,12 +198,23 @@ class Order(BaseModel):
 @app.get("/orders/")
 async def get_all_orders(supabase_client: Client = Depends(get_supabase_client)):
     try:
-        response = supabase_client.table("orders").select("*").execute()
+        response = (
+            supabase_client.table("orders")
+            .select(
+                """
+            *,
+            items (name),
+            supplier (name),
+            customers (name)
+            """
+            )
+            .execute()
+        )
 
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No orders found",  # changed from no suppliers found
+                detail="No orders found",
             )
 
         return {"data": response.data}
@@ -255,6 +266,27 @@ async def add_order(
         )
     except Exception as e:
         logging.exception("Error in add_order")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {e}",
+        )
+
+
+@app.get("/orders/total-revenue/")
+async def get_total_revenue(supabase_client: Client = Depends(get_supabase_client)):
+    try:
+        response = supabase_client.table("orders").select("total_price").execute()
+
+        if not response.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No orders found",
+            )
+
+        total_revenue = sum(order.get("total_price") or 0 for order in response.data)
+        return {"total_revenue": total_revenue}
+    except Exception as e:
+        logging.exception("Error in get_total_revenue")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {e}",
