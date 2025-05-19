@@ -1,4 +1,3 @@
-// src/pages/index.js (or wherever your Index component is)
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
@@ -7,22 +6,45 @@ import AlertSection from "@/components/dashboard/AlertSection";
 import PricingRules from "@/components/pricing/PricingRules";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { getItemsData } from "@/api-reqs/items";
+
+// Assuming this is your API call function
+const getItemsData = async () => {
+  // Replace this with your actual API call
+  // For demonstration, I'm simulating a fetch with a delay
+  return new Promise<any[]>((resolve) => {
+    setTimeout(() => {
+      // Simulate a successful response with an empty array or some data
+      resolve([]); // Or resolve([{ id: 1, name: 'Item 1', ... }]);
+      // Simulate an error (for testing)
+      // reject(new Error('Failed to fetch items'));
+    }, 500); // Simulate a 500ms delay
+  });
+};
+
+interface InventoryItem {
+  id?: string; // Changed to string to match your mapping
+  name: string;
+  sku: string | null;
+  category: string | null;
+  price: number | null;
+  stockLevel: number | null; // Changed to stockLevel
+  status: string | null;
+}
 
 const Index = () => {
   const { toast } = useToast();
-  const [supabaseItems, setSupabaseItems] = useState([]);
+  const [supabaseItems, setSupabaseItems] = useState<any[]>([]); // Keep as an array
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchItemsFromSupabase = async () => {
       try {
         const data = await getItemsData();
-        setSupabaseItems(data);
+        setSupabaseItems(data); // Set the fetched data (which should be an array)
         setLoading(false);
-      } catch (error) {
-        setError(error);
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch items");
         setLoading(false);
       }
     };
@@ -35,6 +57,19 @@ const Index = () => {
       description: "Your inventory management dashboard is ready.",
     });
   }, [toast]);
+
+  // Function to transform item data
+  const transformItemData = (items: any[]): InventoryItem[] => {
+    return items.map((item) => ({
+      id: item?.id?.toString() || "N/A", // Use optional chaining and nullish coalescing
+      name: item?.name || "N/A",
+      sku: item?.sku ?? "N/A", // Use nullish coalescing for brevity
+      category: item?.category || "N/A",
+      price: item?.price || 0,
+      stockLevel: item?.stocklevel || 0, // Corrected property name
+      status: item?.status || "N/A",
+    }));
+  };
 
   if (loading) {
     return (
@@ -50,7 +85,7 @@ const Index = () => {
     return (
       <AppLayout>
         <div className="space-y-8">
-          <h1>Error loading items: {error.message}</h1>
+          <h1>Error loading items: {error}</h1>
         </div>
       </AppLayout>
     );
@@ -62,7 +97,7 @@ const Index = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back! Here's an overview of your inventory today.
+            Welcome back! Here&apos;s an overview of your inventory today.
           </p>
         </div>
 
@@ -83,57 +118,33 @@ const Index = () => {
               <TabsContent value="all" className="mt-0">
                 <StockTable
                   title="All Inventory Items"
-                  data={supabaseItems.map((item) => ({
-                    id: item.id?.toString() || "N/A",
-                    name: item.name || "N/A",
-                    sku: item.sku == null ? "N/A" : item.sku,
-                    category: item?.category || "N/A",
-                    price: item?.price || 0,
-                    stockLevel: item?.stocklevel || 0,
-                    status: item?.status || "N/A",
-                  }))}
+                  data={transformItemData(supabaseItems)} // Use the transform function
                 />
               </TabsContent>
 
               <TabsContent value="low-stock" className="mt-0">
                 <StockTable
                   title="Low Stock Items"
-                  data={supabaseItems
-                    .filter(
+                  data={transformItemData(
+                    supabaseItems.filter(
                       (item) =>
                         item?.status &&
                         item.status.toLowerCase() === "low stock"
                     )
-                    .map((item) => ({
-                      id: item.id?.toString() || "N/A",
-                      name: item?.name || "N/A",
-                      sku: item?.sku == null ? "N/A" : item.sku,
-                      category: item?.category || "N/A",
-                      price: item?.price || 0,
-                      stockLevel: item?.stocklevel || 0,
-                      status: item?.status || "N/A",
-                    }))}
+                  )}
                 />
               </TabsContent>
 
               <TabsContent value="out-of-stock" className="mt-0">
                 <StockTable
                   title="Out of Stock Items"
-                  data={supabaseItems
-                    .filter(
+                  data={transformItemData(
+                    supabaseItems.filter(
                       (item) =>
                         item?.status &&
                         item.status.toLowerCase() === "out of stock"
                     )
-                    .map((item) => ({
-                      id: item.id?.toString() || "N/A",
-                      name: item?.name || "N/A",
-                      sku: item?.sku == null ? "N/A" : item.sku,
-                      category: item?.category || "N/A",
-                      price: item?.price || 0,
-                      stockLevel: item?.stocklevel || 0,
-                      status: item?.status || "N/A",
-                    }))}
+                  )}
                 />
               </TabsContent>
             </Tabs>

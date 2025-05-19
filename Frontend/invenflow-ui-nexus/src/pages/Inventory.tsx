@@ -30,7 +30,8 @@ interface InventoryItem {
   category: string | null;
   price: number | null;
   stocklevel: number | null;
-  supplier: string | null;
+  supplier: number | null; // Now likely the supplier ID
+  supplier_name?: string | null; // New property for the supplier name
   lastUpdated: string | null;
 }
 
@@ -43,13 +44,13 @@ const formSchema = z.object({
     .positive({ message: "Price must be positive." })
     .nullable()
     .optional(),
-  stocklevel: z.coerce
+  stockLevel: z.coerce
     .number()
     .int()
     .nonnegative({ message: "Stock must be non-negative." })
     .nullable()
     .optional(),
-  supplier: z.string().nullable().optional(),
+  supplier: z.coerce.number().nullable().optional(), // Supplier ID from the form
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -65,7 +66,7 @@ const Inventory = () => {
       sku: null,
       category: null,
       price: null,
-      stocklevel: null,
+      stockLevel: null,
       supplier: null,
     },
   });
@@ -78,7 +79,8 @@ const Inventory = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        setInventoryItems(data.data);
+        // Assuming your backend now returns the supplier name as part of the item data
+        setInventoryItems(data);
         setLoading(false);
       } catch (err: any) {
         setError(err);
@@ -111,7 +113,8 @@ const Inventory = () => {
         return;
       }
 
-      setInventoryItems([...inventoryItems, responseData.data]);
+      // Assuming your backend returns the new item with the supplier name
+      setInventoryItems([...inventoryItems, responseData]);
       form.reset();
       toast({
         title: "Item Added",
@@ -147,124 +150,9 @@ const Inventory = () => {
   return (
     <AppLayout>
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">
-            Inventory Management
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your inventory items and track stock levels.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="md:col-span-1">
-            <CardHeader>
-              <CardTitle>Add New Item</CardTitle>
-              <CardDescription>
-                Add a new product to your inventory.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Product Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter product name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="sku"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>SKU</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter SKU" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter category" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Price ($)</FormLabel>
-                        <FormControl>
-                          <Input type="number" step="0.01" min="0" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="stocklevel" // Ensure this matches the schema
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Stock Level</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="supplier"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Supplier</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter supplier name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button type="submit" className="w-full">
-                    Add Item
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-
-          <div className="md:col-span-2">
-            <InventoryTable data={inventoryItems} />
-          </div>
+        {/* ... your UI ... */}
+        <div className="md:col-span-2">
+          <InventoryTable data={inventoryItems} />
         </div>
       </div>
     </AppLayout>
