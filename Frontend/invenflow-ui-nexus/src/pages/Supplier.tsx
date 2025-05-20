@@ -7,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { SupplierTable } from "@/components/supplier/SupplierTable";
 
 interface Supplier {
@@ -20,7 +19,7 @@ interface Supplier {
 const formSchema = z.object({
   name: z.string().min(2),
   address: z.string().nullable().optional(),
-  gst: z.string().nullable().optional(), // use gst here, matching DB column name
+  gst: z.string().nullable().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -35,7 +34,7 @@ const Supplier = () => {
     defaultValues: {
       name: "",
       address: null,
-      gstno: null, // use gstno here
+      gst: null,
     },
   });
 
@@ -63,7 +62,6 @@ const Supplier = () => {
   const onSubmit = async (values: FormValues) => {
     try {
       const res = await fetch("http://localhost:8000/add-supplier/", {
-        // note trailing slash
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
@@ -115,28 +113,42 @@ const Supplier = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-8">
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-        >
-          <div>
-            <Label>Name</Label>
-            <Input {...form.register("name")} />
-          </div>
-          <div>
-            <Label>Address</Label>
-            <Input {...form.register("address")} />
-          </div>
-          <div>
-            <Label>GST Number</Label>
-            <Input {...form.register("gst")} />
-          </div>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          Supplier Dashboard
+        </h1>
+        <p className="text-gray-600">View and manage your suppliers.</p>
+      </div>
 
-          <div className="md:col-span-3">
-            <Button type="submit">Add Supplier</Button>
-          </div>
-        </form>
+      <div className="space-y-8">
+        <div className="border border-gray-200 rounded-2xl p-6 shadow-sm">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            Add Supplier
+          </h2>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
+            <div>
+              <Label>Name</Label>
+              <Input {...form.register("name")} />
+            </div>
+            <div>
+              <Label>Address</Label>
+              <Input {...form.register("address")} />
+            </div>
+            <div>
+              <Label>GST Number</Label>
+              <Input {...form.register("gst")} />
+            </div>
+
+            <div className="md:col-span-3">
+              <Button type="submit" className="w-full md:w-auto">
+                Add Supplier
+              </Button>
+            </div>
+          </form>
+        </div>
 
         <SupplierTable data={suppliers} />
       </div>
