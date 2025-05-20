@@ -8,22 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { SupplierTable } from "@/components/supplier/SupplierTable"; // adjust path if needed
+import { SupplierTable } from "@/components/supplier/SupplierTable";
 
-// Supplier interface matching the table design
 interface Supplier {
   id?: number;
   name: string;
   address: string | null;
-  gstno: string | null;
-  created_at?: string | null;
+  gst: string | null;
 }
 
-// Validation schema with zod
 const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  name: z.string().min(2),
   address: z.string().nullable().optional(),
-  gstno: z.string().nullable().optional(),
+  gst: z.string().nullable().optional(), // use gst here, matching DB column name
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -38,7 +35,7 @@ const Supplier = () => {
     defaultValues: {
       name: "",
       address: null,
-      gstno: null,
+      gstno: null, // use gstno here
     },
   });
 
@@ -65,7 +62,8 @@ const Supplier = () => {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      const res = await fetch("http://localhost:8000/add-supplier", {
+      const res = await fetch("http://localhost:8000/add-supplier/", {
+        // note trailing slash
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
@@ -132,7 +130,7 @@ const Supplier = () => {
           </div>
           <div>
             <Label>GST Number</Label>
-            <Input {...form.register("gstno")} />
+            <Input {...form.register("gst")} />
           </div>
 
           <div className="md:col-span-3">

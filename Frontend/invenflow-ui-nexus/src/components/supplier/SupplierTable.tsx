@@ -11,8 +11,7 @@ interface Supplier {
   id: number;
   name: string;
   address: string | null;
-  gstno: string | null;
-  // removed created_at
+  gst: string | null; // changed from gstno to gst
 }
 
 interface SupplierTableProps {
@@ -28,7 +27,6 @@ export const SupplierTable: React.FC<SupplierTableProps> = ({ data }) => {
             <TableHead className="w-[100px]">Name</TableHead>
             <TableHead>Address</TableHead>
             <TableHead>GST No</TableHead>
-            {/* Removed Created At column */}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -36,8 +34,7 @@ export const SupplierTable: React.FC<SupplierTableProps> = ({ data }) => {
             <TableRow key={supplier.id}>
               <TableCell className="font-medium">{supplier.name}</TableCell>
               <TableCell>{supplier.address || "-"}</TableCell>
-              <TableCell>{supplier.gstno || "-"}</TableCell>
-              {/* Removed Created At cell */}
+              <TableCell>{supplier.gst || "-"}</TableCell> {/* updated here */}
             </TableRow>
           ))}
         </TableBody>

@@ -3,7 +3,8 @@ from fastapi import FastAPI, Depends, HTTPException, status, Request
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field
+
 from typing import Optional, List
 from datetime import datetime, timezone
 import logging
@@ -160,8 +161,11 @@ async def add_item(item: Item, supabase_client: Client = Depends(get_supabase_cl
 class SupplierModel(BaseModel):
     name: str
     address: Optional[str] = None
-    gstno: Optional[str] = None
-    id: Optional[int] = None  # Include ID if present in response
+    gstno: Optional[str] = Field(None, alias="gst")  # map gst column to gstno field
+    id: Optional[int] = None
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 @app.get("/suppliers/")
