@@ -74,6 +74,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
               { name: "Suppliers", icon: ShoppingCart, href: "/suppliers" },
               { name: "Customers", icon: PersonStanding, href: "/customers" },
               { name: "Orders", icon: Calendar, href: "/orders" },
+              { name: "Employees", icon: PersonStanding, href: "/employees" },
               { name: "Settings", icon: Settings, href: "/settings" },
             ].map((item) => (
               <li key={item.name}>

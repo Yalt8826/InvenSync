@@ -399,3 +399,66 @@ async def add_customer(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {e}",
         )
+
+
+class InventoryItem(BaseModel):
+    item_id: int
+    quantity: int
+    stockstatus: Optional[str] = None
+    supplier_id: Optional[int] = None
+    item: Optional[ItemName] = None
+    supplier: Optional[SupplierName] = None
+
+
+@app.get("/inventory")
+async def get_inventory():
+    try:
+        response = (
+            supabase.table("inventory")
+            .select(
+                """
+                item_id,
+                supplier_id,
+                quantity,
+                stockstatus,
+                items (
+                    name,
+                    sku,
+                    category,
+                    price
+                ),
+                supplier (
+                    name
+                )
+                """
+            )
+            .execute()
+        )
+
+        if not response.data:
+            raise HTTPException(status_code=500, detail="No data found")
+
+        result = []
+        for record in response.data:
+            item_info = record.get("items", {})
+            supplier_info = record.get("supplier", {})
+            result.append(
+                {
+                    "item_id": record["item_id"],
+                    "name": item_info.get("name"),
+                    "sku": item_info.get("sku"),
+                    "category": item_info.get("category"),
+                    "price": item_info.get("price"),
+                    "stocklevel": record.get("quantity"),
+                    "stockstatus": record.get("stockstatus"),
+                    "supplier": record.get("supplier_id"),
+                    "supplier_name": supplier_info.get("name"),
+                    "lastUpdated": None,
+                }
+            )
+
+        return {"data": result}
+
+    except Exception as e:
+        print(f"Error fetching inventory: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")

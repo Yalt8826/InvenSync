@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Supplier from "./pages/Supplier";
 import Customers from "./pages/Customers";
 import Orders from "./pages/Orders";
+import Employees from "./pages/Employees";
 import UserSettings from "./pages/UserSettings";
 import NotFound from "./pages/NotFound";
 import { useEffect, useState } from "react";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/suppliers" element={<Supplier />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/employees" element={<Employees />} />
           <Route path="/settings" element={<UserSettings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
