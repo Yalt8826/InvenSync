@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { CustomerTable } from "@/components/customer/CustomerTable"; // You need to create this table component
+import { CustomerTable } from "@/components/customer/CustomerTable";
 
 interface Customer {
   id?: number;
@@ -123,39 +123,53 @@ const Customers = () => {
 
   return (
     <AppLayout>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          Customer Dashboard
+        </h1>
+        <p className="text-gray-600">Manage your customer records.</p>
+      </div>
+
       <div className="space-y-8">
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-        >
-          <div>
-            <Label>Name</Label>
-            <Input {...form.register("name")} />
-          </div>
-          <div>
-            <Label>Address</Label>
-            <Input {...form.register("address")} />
-          </div>
-          <div>
-            <Label>Phone Number</Label>
-            <Input {...form.register("phone_no")} />
-          </div>
-          <div>
-            <Label>Email</Label>
-            <Input {...form.register("email")} />
-          </div>
-          <div>
-            <Label>Gender</Label>
-            <Input {...form.register("gender")} />
-          </div>
-          <div>
-            <Label>Date of Birth</Label>
-            <Input type="date" {...form.register("dob")} />
-          </div>
-          <div className="md:col-span-3">
-            <Button type="submit">Add Customer</Button>
-          </div>
-        </form>
+        <div className="border border-gray-200 rounded-2xl p-6 shadow-sm">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            Add Customer
+          </h2>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
+            <div>
+              <Label>Name</Label>
+              <Input {...form.register("name")} />
+            </div>
+            <div>
+              <Label>Address</Label>
+              <Input {...form.register("address")} />
+            </div>
+            <div>
+              <Label>Phone Number</Label>
+              <Input {...form.register("phone_no")} />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input {...form.register("email")} />
+            </div>
+            <div>
+              <Label>Gender</Label>
+              <Input {...form.register("gender")} />
+            </div>
+            <div>
+              <Label>Date of Birth</Label>
+              <Input type="date" {...form.register("dob")} />
+            </div>
+            <div className="md:col-span-3">
+              <Button type="submit" className="w-full md:w-auto">
+                Add Customer
+              </Button>
+            </div>
+          </form>
+        </div>
 
         <CustomerTable data={customers} />
       </div>
