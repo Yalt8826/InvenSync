@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OrderTable } from "@/components/orders/OrderTable";
 
-// Order interface (matches the Python backend) - Adjusted to reflect what we RECEIVE from the backend
+// Corrected Order interface (removed created_at)
 export interface Order {
   id: number;
   item_id: number;
@@ -20,14 +20,13 @@ export interface Order {
   order_date: string;
   expected_date: string;
   status: string;
-  created_at: string;
 
   items?: { name: string };
   supplier?: { name: string };
   customer?: { name: string };
 }
 
-// Form validation schema - Include customer_id
+// Form validation schema
 const formSchema = z.object({
   item_id: z.coerce.number().min(1, { message: "Item ID is required." }),
   supplier_id: z.coerce
@@ -82,24 +81,23 @@ const Orders = () => {
   const onSubmit = async (values: FormValues) => {
     try {
       const res = await fetch("http://localhost:8000/add-order", {
-        // Removed trailing slash
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values), // Send item_id, supplier_id, customer_id, and quantity
+        body: JSON.stringify(values),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
         let errorMessage = "Failed to add order.";
-        if (result && result.detail) {
+        if (result?.detail) {
           if (Array.isArray(result.detail)) {
-            // Format detailed validation errors from FastAPI
-            const validationErrors = result.detail.map(
-              (err: { loc: string[]; msg: string }) =>
-                `${err.loc.join(".")} - ${err.msg}`
-            );
-            errorMessage = validationErrors.join("\n");
+            errorMessage = result.detail
+              .map(
+                (err: { loc: string[]; msg: string }) =>
+                  `${err.loc.join(".")} - ${err.msg}`
+              )
+              .join("\n");
           } else if (typeof result.detail === "string") {
             errorMessage = result.detail;
           }
@@ -113,17 +111,11 @@ const Orders = () => {
       }
 
       if (result.data) {
-        const newOrder: Order = result.data;
-        setOrders((prev) => [...prev, newOrder]);
+        setOrders((prev) => [...prev, result.data]);
         form.reset();
         toast({
           title: "Order Added",
-          description: `Order for item ${newOrder.item_id} added successfully.`,
-        });
-      } else {
-        toast({
-          title: "Order Added",
-          description: `Order added successfully.`,
+          description: `Order for item ${result.data.item_id} added successfully.`,
         });
       }
     } catch (error: any) {
@@ -153,34 +145,44 @@ const Orders = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-8">
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4" // Adjusted grid columns
-        >
-          <div>
-            <Label>Item ID</Label>
-            <Input type="number" {...form.register("item_id")} />
-          </div>
-          <div>
-            <Label>Supplier ID</Label>
-            <Input type="number" {...form.register("supplier_id")} />
-          </div>
-          <div>
-            <Label>Customer ID</Label>
-            <Input type="number" {...form.register("customer_id")} />
-          </div>
-          <div>
-            <Label>Quantity</Label>
-            <Input type="number" {...form.register("quantity")} />
-          </div>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          Orders Dashboard
+        </h1>
+        <p className="text-gray-600">Track and manage your orders.</p>
+      </div>
 
-          <div className="md:col-span-4">
-            {" "}
-            {/* Adjusted colspan */}
-            <Button type="submit">Add Order</Button>
-          </div>
-        </form>
+      <div className="space-y-8">
+        <div className="border border-gray-200 rounded-2xl p-6 shadow-sm">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            Add Order
+          </h2>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="grid grid-cols-1 md:grid-cols-4 gap-4"
+          >
+            <div>
+              <Label>Item ID</Label>
+              <Input type="number" {...form.register("item_id")} />
+            </div>
+            <div>
+              <Label>Supplier ID</Label>
+              <Input type="number" {...form.register("supplier_id")} />
+            </div>
+            <div>
+              <Label>Customer ID</Label>
+              <Input type="number" {...form.register("customer_id")} />
+            </div>
+            <div>
+              <Label>Quantity</Label>
+              <Input type="number" {...form.register("quantity")} />
+            </div>
+
+            <div className="md:col-span-4">
+              <Button type="submit">Add Order</Button>
+            </div>
+          </form>
+        </div>
 
         <OrderTable data={orders} />
       </div>
