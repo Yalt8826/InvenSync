@@ -5,7 +5,7 @@
 <h3>Backend : Python</h3>
 <h3>Frontend : React</h3>
 <br>
-This is react app let's us manage a inventory.
+This react app let's us manage a inventory.
 
 # To run the Backend
 
