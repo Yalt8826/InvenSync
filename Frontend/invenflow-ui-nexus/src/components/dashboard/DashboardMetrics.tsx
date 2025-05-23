@@ -1,4 +1,4 @@
-// DashboardMetrics.tsx
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import {
   BarChart as ChartIcon,
@@ -6,9 +6,13 @@ import {
   AlertTriangle,
   Package2,
 } from "lucide-react";
-import { getItemsData } from "@/api-reqs/items";
-import { getTotalRevenue } from "@/api-reqs/totalrev"; // 👈 API to get total revenue
-import { useEffect, useState } from "react";
+import { getInventoryData } from "@/api-reqs/inventory";
+import { getTotalRevenue } from "@/api-reqs/totalrev";
+
+// Temporarily loosen the type for debug purposes
+interface InventoryItem {
+  [key: string]: any;
+}
 
 interface MetricCardProps {
   title: string;
@@ -27,7 +31,7 @@ const MetricCard = ({
   isWarning,
   icon,
 }: MetricCardProps) => (
-  <Card className="metric-card">
+  <Card className="p-4 rounded-2xl shadow-md">
     <div className="flex items-center justify-between">
       <div>
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
@@ -52,30 +56,29 @@ const MetricCard = ({
 );
 
 export const DashboardMetrics = () => {
-  const [supabaseItems, setSupabaseItems] = useState([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
-  const [totalStock, setTotalStock] = useState(0);
+  const [error, setError] = useState<Error | null>(null);
   const [revenue, setRevenue] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [itemsData, revenueData] = await Promise.all([
-          getItemsData(),
+        const [inventoryResponse, revenueData] = await Promise.all([
+          getInventoryData(),
           getTotalRevenue(),
         ]);
 
-        setSupabaseItems(itemsData);
+        console.log("Raw inventory response:", inventoryResponse);
+
+        const items = inventoryResponse || [];
+        console.log("Parsed inventory items:", items);
+
+        setInventory(items);
         setRevenue(revenueData);
         setLoading(false);
-
-        const calculatedTotalStock = itemsData.reduce(
-          (sum, item) => sum + (item?.stocklevel || 0),
-          0
-        );
-        setTotalStock(calculatedTotalStock);
-      } catch (err) {
+      } catch (err: any) {
+        console.error("Error fetching data:", err);
         setError(err);
         setLoading(false);
       }
@@ -84,18 +87,23 @@ export const DashboardMetrics = () => {
     fetchData();
   }, []);
 
-  if (loading) {
-    return <div>Loading metrics...</div>;
-  }
+  if (loading) return <div>Loading metrics...</div>;
+  if (error) return <div>Error loading metrics: {error.message}</div>;
 
-  if (error) {
-    return <div>Error loading metrics: {error.message}</div>;
-  }
+  // Debug log before computing metrics
+  console.log("Inventory before metrics calculation:", inventory);
 
-  const totalProducts = supabaseItems.length;
-  const lowStockItemsCount = supabaseItems.filter(
-    (item) => item?.status?.toLowerCase() === "low stock"
-  ).length;
+  const totalProducts = new Set(inventory.map((item) => item.item_id)).size;
+
+  const totalStock = inventory.reduce((sum, item) => {
+    console.log("Item stocklevel:", item.stocklevel);
+    return sum + (Number(item.stocklevel) || 0);
+  }, 0);
+
+  const lowStockItems = inventory.filter((item) => {
+    console.log("Item stockstatus:", item.stockstatus);
+    return item.stockstatus?.toLowerCase() === "low stock";
+  }).length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -111,9 +119,9 @@ export const DashboardMetrics = () => {
       />
       <MetricCard
         title="Low Stock Items"
-        value={lowStockItemsCount}
+        value={lowStockItems}
         change="Based on current inventory"
-        isWarning={lowStockItemsCount > 5}
+        isWarning={lowStockItems > 5}
         icon={<AlertTriangle className="h-6 w-6 text-yellow-500" />}
       />
       <MetricCard
