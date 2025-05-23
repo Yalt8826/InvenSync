@@ -34,7 +34,8 @@ export const SupplierTable: React.FC<SupplierTableProps> = ({ data }) => {
             <TableRow key={supplier.id}>
               <TableCell className="font-medium">{supplier.name}</TableCell>
               <TableCell>{supplier.address || "-"}</TableCell>
-              <TableCell>{supplier.gst || "-"}</TableCell> {/* updated here */}
+              <TableCell>{supplier.gstno || "-"}</TableCell>{" "}
+              {/* updated here */}
             </TableRow>
           ))}
         </TableBody>

@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi import FastAPI, Depends, HTTPException, status, Request, APIRouter
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 import logging
 
 load_dotenv()
+
+router = APIRouter()
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
@@ -68,10 +70,10 @@ async def get_all_items(supabase_client: Client = Depends(get_supabase_client)):
         response = supabase_client.table("items").select("*").execute()
         return {"data": response.data}
     except Exception as e:
-        logging.exception("Error in get_all_items")  # Log the error
+        logging.exception("Error in get_all_items")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )  # Use HTTPException
+        )
 
 
 @app.get("/items/{item_id}")
@@ -81,9 +83,7 @@ async def get_item_by_id(
     try:
         response = (
             supabase_client.table("items")
-            .select(
-                "id, name, sku, category, price, stocklevel, supplier_id"
-            )  # changed supplier
+            .select("id, name, sku, category, price, stocklevel, supplier_id")
             .eq("id", item_id)
             .single()
             .execute()
@@ -102,66 +102,44 @@ async def get_item_by_id(
         )
 
 
-@app.post("/items/")  # Correct route for creating items
-async def create_item(
-    item: Item, supabase_client: Client = Depends(get_supabase_client)
-):
+@app.post("/add-item")
+async def add_item(item: Item, supabase_client: Client = Depends(get_supabase_client)):
     try:
         item_data = item.dict(exclude_none=True)
         item_data["created_at"] = datetime.now(timezone.utc).isoformat()
         response = supabase_client.table("items").insert(item_data).execute()
 
-        if response.error:
+        if hasattr(response, "error") and response.error is not None:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(response.error),
             )
 
-        if response.data and len(response.data) > 0:
+        if hasattr(response, "data") and response.data and len(response.data) > 0:
             return {"data": response.data[0]}
         else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="No data returned from insert.",
             )
-    except HTTPException as e:
-        raise e
+    except HTTPException:
+        raise
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors()
         )
     except Exception as e:
-        logging.exception("Error in create_item")
+        logging.exception("Error in add_item")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {e}",
         )
 
 
-@app.post("/add-item")
-async def add_item(item: Item, supabase_client: Client = Depends(get_supabase_client)):
-    try:
-        item_data = item.dict(exclude_none=True)
-        item_data["created_at"] = datetime.now(timezone.utc).isoformat()
-        data, error = supabase_client.table("items").insert(item_data).execute()
-
-        if error:
-            raise HTTPException(status_code=500, detail=error.message)
-
-        if data and len(data) > 0:
-            return {"data": data[0]}
-        else:
-            raise HTTPException(status_code=500, detail="No data returned from insert.")
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
-
-
 class SupplierModel(BaseModel):
     name: str
     address: Optional[str] = None
-    gstno: Optional[str] = Field(None, alias="gst")  # map gst column to gstno field
+    gstno: Optional[str] = Field(None, alias="gst")
     id: Optional[int] = None
 
     class Config:
@@ -195,24 +173,24 @@ async def add_supplier(
 ):
     try:
         supplier_data = supplier.dict(exclude_none=True)
-        # Do NOT add created_at since the table doesn't have that column
         response = supabase_client.table("supplier").insert(supplier_data).execute()
 
-        if response.error:
+        if hasattr(response, "error") and response.error is not None:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(response.error),
             )
 
-        if response.data and len(response.data) > 0:
+        if hasattr(response, "data") and response.data and len(response.data) > 0:
             return {"data": response.data[0]}
         else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="No data returned from insert.",
             )
-    except HTTPException as e:
-        raise e
+
+    except HTTPException:
+        raise
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors()
@@ -221,7 +199,7 @@ async def add_supplier(
         logging.exception("Error in add_supplier")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {e}",
+            detail=f"Internal server error: {str(e)}",
         )
 
 
@@ -231,7 +209,7 @@ class OrderResponse(BaseModel):
     quantity: int
     order_date: Optional[datetime] = None
     expected_date: Optional[datetime] = None
-    status: Optional[str] = None  # e.g., "pending", "shipped", "delivered"
+    status: Optional[str] = None
     total_price: Optional[float] = None
     notes: Optional[str] = None
     items: Optional[ItemName] = None
@@ -291,21 +269,21 @@ async def add_order(
 
         response = supabase_client.table("orders").insert(order_data).execute()
 
-        if response.error:
+        if hasattr(response, "error") and response.error is not None:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(response.error),
             )
 
-        if response.data and len(response.data) > 0:
+        if hasattr(response, "data") and response.data and len(response.data) > 0:
             return {"data": response.data[0]}
         else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="No data returned from insert.",
             )
-    except HTTPException as e:
-        raise e
+    except HTTPException:
+        raise
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors()
@@ -345,8 +323,8 @@ class CustomerModel(BaseModel):
     phone_no: Optional[str] = None
     email: Optional[str] = None
     gender: Optional[str] = None
-    dob: Optional[str] = None  # Expecting format:-MM-DD
-    id: Optional[int] = None  # Include ID if present in response
+    dob: Optional[str] = None
+    id: Optional[int] = None
 
 
 @app.get("/customers/")
@@ -378,21 +356,21 @@ async def add_customer(
         customer_data = customer.dict(exclude_none=True)
         response = supabase_client.table("customers").insert(customer_data).execute()
 
-        if response.error:
+        if hasattr(response, "error") and response.error is not None:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=str(response.error),
             )
 
-        if response.data and len(response.data) > 0:
+        if hasattr(response, "data") and response.data and len(response.data) > 0:
             return {"data": response.data[0]}
         else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="No data returned from insert.",
             )
-    except HTTPException as e:
-        raise e
+    except HTTPException:
+        raise
     except ValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=e.errors()
@@ -466,3 +444,41 @@ async def get_inventory():
     except Exception as e:
         print(f"Error fetching inventory: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+class SupplyInput(BaseModel):
+    item_id: int
+    supplier_id: int
+    quantity: int
+
+
+import logging
+
+
+@app.post("/add-supply/")
+async def add_supply(
+    supply: SupplyInput, supabase_client: Client = Depends(get_supabase_client)
+):
+    try:
+        supply_data = supply.dict()
+
+        # This line will raise an exception if something goes wrong
+        response = supabase_client.table("supply").insert(supply_data).execute()
+
+        # Log the data for debugging
+        print("Inserted supply:", response.data)
+
+        return {
+            "success": True,
+            "message": "Supply added successfully",
+            "data": response.data,
+        }
+
+    except Exception as e:
+        import traceback
+
+        print("Exception in /add-supply/:", traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error adding supply: {e}",
+        )

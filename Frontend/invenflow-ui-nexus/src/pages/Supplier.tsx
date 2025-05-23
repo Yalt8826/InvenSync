@@ -78,14 +78,22 @@ const Supplier = () => {
         return;
       }
 
-      if (result.data) {
-        setSuppliers((prev) => [...prev, result.data]);
-        form.reset();
+      // ✅ Use result.data instead of result
+      if (!result?.data || !result.data.name) {
         toast({
-          title: "Supplier Added",
-          description: `${result.data.name} added successfully.`,
+          title: "Unexpected response format",
+          description: "Supplier added, but response format was not expected.",
+          variant: "default",
         });
+        return;
       }
+
+      setSuppliers((prev) => [...prev, result.data]);
+      form.reset();
+      toast({
+        title: "Supplier Added",
+        description: `${result.data.name} added successfully.`,
+      });
     } catch (error: any) {
       toast({
         title: "Error adding supplier",

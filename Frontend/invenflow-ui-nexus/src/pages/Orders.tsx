@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OrderTable } from "@/components/orders/OrderTable";
 
-// Corrected Order interface (removed created_at)
+// Interfaces
 export interface Order {
   id: number;
   item_id: number;
@@ -20,21 +20,31 @@ export interface Order {
   order_date: string;
   expected_date: string;
   status: string;
-
   items?: { name: string };
   supplier?: { name: string };
   customer?: { name: string };
 }
 
-// Form validation schema
+interface Item {
+  id: number;
+  name: string;
+}
+
+interface Supplier {
+  id: number;
+  name: string;
+}
+
+interface Customer {
+  id: number;
+  name: string;
+}
+
+// Validation schema
 const formSchema = z.object({
-  item_id: z.coerce.number().min(1, { message: "Item ID is required." }),
-  supplier_id: z.coerce
-    .number()
-    .min(1, { message: "Supplier ID is required." }),
-  customer_id: z.coerce
-    .number()
-    .min(1, { message: "Customer ID is required." }),
+  item_id: z.coerce.number().min(1, { message: "Item is required." }),
+  supplier_id: z.coerce.number().min(1, { message: "Supplier is required." }),
+  customer_id: z.coerce.number().min(1, { message: "Customer is required." }),
   quantity: z.coerce
     .number()
     .min(1, { message: "Quantity must be at least 1." }),
@@ -44,6 +54,9 @@ type FormValues = z.infer<typeof formSchema>;
 
 const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -57,17 +70,36 @@ const Orders = () => {
     },
   });
 
+  // Fetch all required data
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await fetch("http://localhost:8000/orders/");
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const result = await res.json();
-        if (Array.isArray(result.data)) {
-          setOrders(result.data);
-        } else {
-          throw new Error("Invalid response format");
+        const [ordersRes, itemsRes, suppliersRes, customersRes] =
+          await Promise.all([
+            fetch("http://localhost:8000/orders/"),
+            fetch("http://localhost:8000/items/"),
+            fetch("http://localhost:8000/suppliers/"),
+            fetch("http://localhost:8000/customers/"),
+          ]);
+
+        if (
+          !ordersRes.ok ||
+          !itemsRes.ok ||
+          !suppliersRes.ok ||
+          !customersRes.ok
+        ) {
+          throw new Error("One or more resources failed to load.");
         }
+
+        const ordersData = await ordersRes.json();
+        const itemsData = await itemsRes.json();
+        const suppliersData = await suppliersRes.json();
+        const customersData = await customersRes.json();
+
+        setOrders(ordersData.data || []);
+        setItems(itemsData.data || []);
+        setSuppliers(suppliersData.data || []);
+        setCustomers(customersData.data || []);
       } catch (err: any) {
         setError(err);
       } finally {
@@ -75,9 +107,10 @@ const Orders = () => {
       }
     };
 
-    fetchOrders();
+    fetchAll();
   }, []);
 
+  // Form submit handler
   const onSubmit = async (values: FormValues) => {
     try {
       const res = await fetch("http://localhost:8000/add-order", {
@@ -102,6 +135,7 @@ const Orders = () => {
             errorMessage = result.detail;
           }
         }
+
         toast({
           title: "Error adding order",
           description: errorMessage,
@@ -162,16 +196,46 @@ const Orders = () => {
             className="grid grid-cols-1 md:grid-cols-4 gap-4"
           >
             <div>
-              <Label>Item ID</Label>
-              <Input type="number" {...form.register("item_id")} />
+              <Label>Item</Label>
+              <select
+                {...form.register("item_id")}
+                className="w-full border rounded px-2 py-1"
+              >
+                <option value={0}>Select Item</option>
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
-              <Label>Supplier ID</Label>
-              <Input type="number" {...form.register("supplier_id")} />
+              <Label>Supplier</Label>
+              <select
+                {...form.register("supplier_id")}
+                className="w-full border rounded px-2 py-1"
+              >
+                <option value={0}>Select Supplier</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
-              <Label>Customer ID</Label>
-              <Input type="number" {...form.register("customer_id")} />
+              <Label>Customer</Label>
+              <select
+                {...form.register("customer_id")}
+                className="w-full border rounded px-2 py-1"
+              >
+                <option value={0}>Select Customer</option>
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <Label>Quantity</Label>
