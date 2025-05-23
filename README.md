@@ -1,6 +1,6 @@
 # DBMS Project : 4th Semester
 
-<h2>Project Name : INVENFLOW</h2>
+<h2>Project Name : INVENSYNC</h2>
 <h3>Database : Supabase</h3>
 <h3>Backend : Python</h3>
 <h3>Frontend : React</h3>
