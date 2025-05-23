@@ -3,6 +3,7 @@
 <h2>Project Name : INVENFLOW</h2>
 <h3>Database : Supabase</h3>
 <h3>Backend : Python</h3>
+<h3>Frontend : React</h3>
 <br>
 This is react app let's us manage a inventory.
 

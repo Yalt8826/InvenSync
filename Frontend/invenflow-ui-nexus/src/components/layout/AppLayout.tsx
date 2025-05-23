@@ -69,7 +69,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         <nav className="mt-4 flex-1">
           <ul className="space-y-1 px-2">
             {[
-              { name: "Dashboard", icon: BarChart, href: "/" },
+              { name: "Dashboard", icon: BarChart, href: "/index" },
               { name: "Inventory", icon: Database, href: "/inventory" },
               { name: "Suppliers", icon: ShoppingCart, href: "/suppliers" },
               { name: "Customers", icon: PersonStanding, href: "/customers" },
