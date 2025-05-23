@@ -1,8 +1,8 @@
 # DBMS Project : 4th Semester
 
-<h1>Project Name : INVENFLOW</h1>
-<h2>Database : Supabase</h2>
-<h2>Backend : Python</h2>
+<h2>Project Name : INVENFLOW</h2>
+<h3>Database : Supabase</h3>
+<h3>Backend : Python</h3>
 <br>
 This is react app let's us manage a inventory.
 
